@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server"
 import jwt from "jsonwebtoken"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
+const JWT_SECRET = process.env.JWT_SECRET || "your-fallback-secret-key-change-in-production"
 
 export interface AuthUser {
   id: string
