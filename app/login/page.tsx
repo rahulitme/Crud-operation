@@ -42,11 +42,13 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/admin")
+        // Force a hard redirect to ensure the cookie is properly set
+        window.location.href = "/admin"
       } else {
         setError(data.error || "Login failed")
       }
     } catch (error) {
+      console.error("Login error:", error)
       setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)

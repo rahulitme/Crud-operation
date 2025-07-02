@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
     })
 
-    // Set cookie
+    // Create response
     const response = NextResponse.json({
       message: "Login successful",
       user: {
@@ -43,11 +43,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Set cookie with proper options
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
     })
 
     return response

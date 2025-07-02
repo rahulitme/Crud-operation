@@ -17,6 +17,7 @@ export function verifyToken(token: string): AuthUser | null {
   try {
     return jwt.verify(token, JWT_SECRET) as AuthUser
   } catch (error) {
+    console.error("Token verification error:", error)
     return null
   }
 }
