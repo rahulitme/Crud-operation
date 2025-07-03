@@ -5,9 +5,11 @@ import { generateToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Login API called")
     await dbConnect()
 
     const { email, password } = await request.json()
+    console.log("Login attempt for email:", email)
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
@@ -15,12 +17,16 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const user = await User.findOne({ email })
+    console.log("User found:", user ? "Yes" : "No")
+
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
     // Check password
     const isPasswordValid = await user.comparePassword(password)
+    console.log("Password valid:", isPasswordValid)
+
     if (!isPasswordValid) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
@@ -31,6 +37,8 @@ export async function POST(request: NextRequest) {
       email: user.email,
       role: user.role,
     })
+
+    console.log("Token generated, setting cookie")
 
     // Create response
     const response = NextResponse.json({
@@ -52,6 +60,7 @@ export async function POST(request: NextRequest) {
       path: "/",
     })
 
+    console.log("Login successful, cookie set")
     return response
   } catch (error) {
     console.error("Login error:", error)

@@ -10,7 +10,7 @@ interface Post {
   _id: string
   title: string
   slug: string
-  excerpt?: string
+  content: string
   createdAt: string
   updatedAt: string
 }
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -82,66 +82,89 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="px-4 py-6 sm:px-0">
+          <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage your blog posts</p>
+              <p className="mt-2 text-gray-600">Manage your blog posts</p>
             </div>
             <div className="flex space-x-4">
-              <Link href="/">
-                <Button variant="outline">View Site</Button>
+              <Link href="/admin/create">
+                <Button>Create New Post</Button>
               </Link>
-              <Button onClick={handleLogout} variant="outline">
+              <Button variant="outline" onClick={handleLogout}>
                 Logout
               </Button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <Link href="/admin/create">
-            <Button>Create New Post</Button>
-          </Link>
+        {/* Stats */}
+        <div className="px-4 py-6 sm:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{posts.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Published</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{posts.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">0</div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {error && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+        {/* Posts List */}
+        <div className="px-4 sm:px-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Posts</CardTitle>
+              <CardDescription>Manage your blog posts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <div className="text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-md mb-4">{error}</div>
+              )}
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">All Posts ({posts.length})</h3>
-
-            {posts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No posts yet</p>
-                <p className="text-gray-400 mt-2">Create your first blog post to get started</p>
-                <Link href="/admin/create">
-                  <Button className="mt-4">Create Your First Post</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {posts.map((post) => (
-                  <Card key={post._id}>
-                    <CardHeader>
+              {posts.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No posts yet</p>
+                  <Link href="/admin/create">
+                    <Button>Create Your First Post</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <div key={post._id} className="border rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-xl">{post.title}</CardTitle>
-                          <CardDescription className="mt-2">{post.excerpt || "No excerpt available"}</CardDescription>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Created: {new Date(post.createdAt).toLocaleDateString()}
+                          </p>
+                          <div className="mt-2">
+                            <Badge variant="secondary">Published</Badge>
+                          </div>
                         </div>
-                        <Badge variant="secondary">{post.slug}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
-                          <p>Created: {new Date(post.createdAt).toLocaleDateString()}</p>
-                          <p>Updated: {new Date(post.updatedAt).toLocaleDateString()}</p>
-                        </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 ml-4">
                           <Link href={`/blog/${post.slug}`}>
                             <Button variant="outline" size="sm">
                               View
@@ -157,12 +180,12 @@ export default function AdminDashboard() {
                           </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

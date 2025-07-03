@@ -31,6 +31,8 @@ export default function LoginPage() {
     setError("")
 
     try {
+      console.log("Attempting login with:", formData.email)
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -40,11 +42,14 @@ export default function LoginPage() {
       })
 
       const data = await response.json()
+      console.log("Login response:", data)
 
       if (response.ok) {
-        // Force a hard redirect to ensure the cookie is properly set
+        console.log("Login successful, redirecting...")
+        // Use window.location for a hard redirect to ensure cookies are set
         window.location.href = "/admin"
       } else {
+        console.error("Login failed:", data.error)
         setError(data.error || "Login failed")
       }
     } catch (error) {

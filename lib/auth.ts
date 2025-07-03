@@ -10,12 +10,15 @@ export interface AuthUser {
 }
 
 export function generateToken(user: AuthUser): string {
+  console.log("Generating token for user:", user.email)
   return jwt.sign(user, JWT_SECRET, { expiresIn: "7d" })
 }
 
 export function verifyToken(token: string): AuthUser | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthUser
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser
+    console.log("Token verified for user:", decoded.email)
+    return decoded
   } catch (error) {
     console.error("Token verification error:", error)
     return null
@@ -24,6 +27,7 @@ export function verifyToken(token: string): AuthUser | null {
 
 export function getAuthUser(request: NextRequest): AuthUser | null {
   const token = request.cookies.get("auth-token")?.value
+  console.log("Getting auth user, token exists:", !!token)
   if (!token) return null
   return verifyToken(token)
 }
