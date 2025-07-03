@@ -1,16 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { writeFile } from "fs/promises"
+import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
-import { getAuthUser } from "@/lib/auth"
+import { existsSync } from "fs"
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const user = getAuthUser(request)
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const data = await request.formData()
     const file: File | null = data.get("file") as unknown as File
 
@@ -18,19 +12,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 })
     }
 
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 })
+    }
+
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), "public/uploads")
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
+    }
+
     // Generate unique filename
     const timestamp = Date.now()
-    const filename = `${timestamp}-${file.name}`
-    const path = join(process.cwd(), "public/uploads", filename)
+    const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
+    const filepath = join(uploadsDir, filename)
 
-    await writeFile(path, buffer)
+    await writeFile(filepath, buffer)
+
+    const imageUrl = `/uploads/${filename}`
+
+    console.log("Image uploaded successfully:", imageUrl)
 
     return NextResponse.json({
-      url: `/uploads/${filename}`,
-      filename,
+      success: true,
+      url: imageUrl,
+      filename: filename,
     })
   } catch (error) {
     console.error("Upload error:", error)

@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,20 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Link from "next/link"
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const router = useRouter()
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,14 +21,13 @@ export default function LoginPage() {
     setError("")
 
     try {
-      console.log("Attempting login with:", formData.email)
-
+      console.log("Attempting login...")
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
@@ -46,43 +35,39 @@ export default function LoginPage() {
 
       if (response.ok) {
         console.log("Login successful, redirecting...")
-        // Use window.location for a hard redirect to ensure cookies are set
+        // Force a hard redirect to ensure cookies are properly set
         window.location.href = "/admin"
       } else {
-        console.error("Login failed:", data.error)
         setError(data.error || "Login failed")
       }
     } catch (error) {
       console.error("Login error:", error)
-      setError("Network error. Please try again.")
+      setError("An error occurred during login")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
-          <CardDescription className="text-center">Sign in to access the admin dashboard</CardDescription>
+          <CardTitle>Admin Login</CardTitle>
+          <CardDescription>Sign in to access the admin dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-md">{error}</div>
-            )}
+            {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                name="email"
                 type="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="Enter your email"
+                disabled={isLoading}
               />
             </div>
 
@@ -90,26 +75,27 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                name="password"
                 type="password"
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter your password"
+                disabled={isLoading}
               />
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
-
-            <div className="text-center text-sm">
-              <span className="text-gray-600">Don't have an account? </span>
-              <Link href="/register" className="text-blue-600 hover:underline">
-                Register
-              </Link>
-            </div>
           </form>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-blue-600 hover:underline">
+                Register here
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

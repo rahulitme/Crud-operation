@@ -22,7 +22,7 @@ export function RichTextEditor({
   useEffect(() => {
     if (typeof window !== "undefined" && editorRef.current && !quillRef.current) {
       import("quill").then((Quill) => {
-        // Add image upload handler
+        // Custom image upload handler
         const imageHandler = () => {
           const input = document.createElement("input")
           input.setAttribute("type", "file")
@@ -36,51 +36,58 @@ export function RichTextEditor({
               formData.append("file", file)
 
               try {
+                console.log("Uploading image...")
                 const response = await fetch("/api/upload", {
                   method: "POST",
                   body: formData,
                 })
 
-                if (response.ok) {
-                  const data = await response.json()
-                  const range = quillRef.current.getSelection()
+                const data = await response.json()
+                console.log("Upload response:", data)
+
+                if (response.ok && data.success) {
+                  const range = quillRef.current.getSelection(true)
                   quillRef.current.insertEmbed(range.index, "image", data.url)
+                  quillRef.current.setSelection(range.index + 1)
+                  console.log("Image inserted:", data.url)
+                } else {
+                  console.error("Upload failed:", data.error)
+                  alert("Image upload failed: " + (data.error || "Unknown error"))
                 }
               } catch (error) {
                 console.error("Image upload failed:", error)
+                alert("Image upload failed. Please try again.")
               }
             }
           }
         }
 
-        // Update the modules configuration to include the custom image handler
-        const modules = {
-          toolbar: {
-            container: [
-              [{ header: [1, 2, 3, false] }],
-              ["bold", "italic", "underline", "strike"],
-              [{ list: "ordered" }, { list: "bullet" }],
-              ["blockquote", "code-block"],
-              ["link", "image"],
-              ["clean"],
-            ],
-            handlers: {
-              image: imageHandler,
-            },
-          },
-        }
-
         const quill = new Quill.default(editorRef.current!, {
           theme: "snow",
           placeholder,
-          modules: modules,
+          modules: {
+            toolbar: {
+              container: [
+                [{ header: [1, 2, 3, false] }],
+                ["bold", "italic", "underline", "strike"],
+                [{ list: "ordered" }, { list: "bullet" }],
+                ["blockquote", "code-block"],
+                ["link", "image"],
+                ["clean"],
+              ],
+              handlers: {
+                image: imageHandler,
+              },
+            },
+          },
         })
 
         quill.on("text-change", () => {
-          onChange(quill.root.innerHTML)
+          const html = quill.root.innerHTML
+          onChange(html)
         })
 
-        if (value) {
+        if (value && value !== "<p><br></p>") {
           quill.root.innerHTML = value
         }
 
@@ -91,12 +98,14 @@ export function RichTextEditor({
 
   useEffect(() => {
     if (quillRef.current && value !== quillRef.current.root.innerHTML) {
-      quillRef.current.root.innerHTML = value
+      if (value && value !== "<p><br></p>") {
+        quillRef.current.root.innerHTML = value
+      }
     }
   }, [value])
 
   return (
-    <div className={cn("bg-white", className)}>
+    <div className={cn("bg-white border rounded-md", className)}>
       <div ref={editorRef} className="min-h-[300px]" />
     </div>
   )
